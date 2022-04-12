@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Callable
 from typing import NoReturn
 from ...base import BaseEstimator
+from ...metrics import misclassification_error
 import numpy as np
 
 
@@ -83,14 +84,15 @@ class Perceptron(BaseEstimator):
         if self.include_intercept_:
             X = add_one_col(X)
         self.coefs_ = np.zeros(X.shape[1])
+        self.fitted_ = True
         iterations = 0
         while iterations < self.max_iter_:
+            self.callback_(self, X, y)
             w_flag = False
             for i in range(y.size):
                 Xw = np.matmul(X, self.coefs_)
                 if y[i] * Xw[i] <= 0:
                     w_flag = True
-                    print(self.coefs_)
                     self.coefs_ += y[i] * X[i]
                     continue
             iterations += 1
@@ -130,6 +132,5 @@ class Perceptron(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        from ...metrics import misclassification_error
-        raise NotImplementedError()
+        return misclassification_error(y, self.predict(X))
 
