@@ -9,6 +9,12 @@ def default_callback(fit: Perceptron, x: np.ndarray, y: int):
     pass
 
 
+def add_one_col(X):
+    Xtag = np.ones((X.shape[0], X.shape[1] + 1))
+    Xtag[:, 1:] = X
+    return Xtag
+
+
 class Perceptron(BaseEstimator):
     """
     Perceptron half-space classifier
@@ -33,6 +39,7 @@ class Perceptron(BaseEstimator):
         to be filled in `Perceptron.fit` function.
 
     """
+
     def __init__(self,
                  include_intercept: bool = True,
                  max_iter: int = 1000,
@@ -90,7 +97,22 @@ class Perceptron(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.fit_intercept_`
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = add_one_col(X)
+        self.coefs_ = np.zeros(X.shape[1])
+        iterations = 0
+        while iterations < self.max_iter_:
+            w_flag = False
+            for i in range(y.size):
+                Xw = np.matmul(X, self.coefs_)
+                if y[i] * Xw[i] <= 0:
+                    w_flag = True
+                    print(self.coefs_)
+                    self.coefs_ += y[i] * X[i]
+                    continue
+            iterations += 1
+            if not w_flag:
+                return
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -126,3 +148,4 @@ class Perceptron(BaseEstimator):
             Performance under missclassification loss function
         """
         raise NotImplementedError()
+

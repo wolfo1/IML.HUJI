@@ -67,5 +67,10 @@ def compare_gaussian_classifiers():
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
-    compare_gaussian_classifiers()
+    p = Perceptron()
+    X = np.array([[1, 2, 3], [1, 2, 3]])
+    y = np.array([1, 1])
+    p.fit(X, y)
+    print(p.coefs_)
+    # run_perceptron()
+    # compare_gaussian_classifiers()
