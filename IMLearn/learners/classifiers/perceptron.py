@@ -7,7 +7,7 @@ import numpy as np
 
 
 def default_callback(fit: Perceptron, x: np.ndarray, y: int):
-    pass
+    return fit.loss(x, y)
 
 
 def add_one_col(X):
@@ -71,7 +71,7 @@ class Perceptron(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X_intercepted : ndarray of shape (n_samples, n_features)
             Input data to fit an estimator for
 
         y : ndarray of shape (n_samples, )
@@ -87,14 +87,13 @@ class Perceptron(BaseEstimator):
         self.fitted_ = True
         iterations = 0
         while iterations < self.max_iter_:
-            self.callback_(self, X, y)
             w_flag = False
             for i in range(y.size):
-                Xw = np.matmul(X, self.coefs_)
-                if y[i] * Xw[i] <= 0:
+                if y[i] * np.matmul(self.coefs_, X[i]) <= 0:
                     w_flag = True
-                    self.coefs_ += y[i] * X[i]
-                    continue
+                    self.coefs_ += np.multiply(y[i], X[i])
+                    self.callback_(self, X, y)
+                    break
             iterations += 1
             if not w_flag:
                 return
@@ -113,7 +112,9 @@ class Perceptron(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = add_one_col(X)
+        return np.sign(np.matmul(X, self.coefs_))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """

@@ -25,7 +25,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         """
         super().__init__()
 
-    def _fit(self, X: np.ndarray, y: np.ndarray,) -> NoReturn:
+    def _fit(self, X: np.ndarray, y: np.ndarray, ) -> NoReturn:
         """
         Fit an estimator for given samples
 
@@ -43,9 +43,8 @@ class AgodaCancellationEstimator(BaseEstimator):
         """
         self.rf = RandomForestClassifier(n_estimators=4, random_state=0)
         self.rf.fit(X, y)
-        #self.logisticRegr = LogisticRegression()
-        #self.logisticRegr.fit(X, y)
-
+        # self.logisticRegr = LogisticRegression()
+        # self.logisticRegr.fit(X, y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """

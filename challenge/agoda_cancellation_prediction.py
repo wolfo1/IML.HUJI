@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+
 def parse_policy(policy: str, stay_days: int):
     if policy == 'UNKNOWN':
         return 0, 100
@@ -16,10 +17,11 @@ def parse_policy(policy: str, stay_days: int):
         days = int(first_policy[d_idx + 1: -1])
         P = str(int(round((days / stay_days) * 100, 0)))
     else:
-        P = first_policy[d_idx+1: -1]
+        P = first_policy[d_idx + 1: -1]
     return int(first_policy[:d_idx]), P
 
-def load_data(train_filename: str, test_filename: str):
+
+def load_data(train_filename: str, test_filename: str = None):
     """
     Load Agoda booking cancellation dataset
     Parameters
@@ -36,9 +38,9 @@ def load_data(train_filename: str, test_filename: str):
     """
     # TODO - replace below code with any desired preprocessing
     full_data = pd.read_csv(train_filename).drop_duplicates()
-    test_data = pd.read_csv(test_filename).drop_duplicates()
-    test_size = test_data.shape[0]
-    full_data = pd.concat([full_data, test_data])
+    #test_data = pd.read_csv(test_filename).drop_duplicates()
+    #test_size = test_data.shape[0]
+    # full_data = pd.concat([full_data, test_data])
     y = full_data['cancellation_datetime'].fillna(0)
     y[y != 0] = 1
     y = y.astype(int)
@@ -67,7 +69,8 @@ def load_data(train_filename: str, test_filename: str):
     df["booking_datetime"] = pd.to_datetime(df["booking_datetime"]).dt.dayofyear
     df.drop('checkout_date', axis=1, inplace=True)
     # parse police code
-    df['policy'] = df.apply(lambda x: parse_policy(policy=x['cancellation_policy_code'], stay_days=x['stay_days']), axis=1)
+    df['policy'] = df.apply(lambda x: parse_policy(policy=x['cancellation_policy_code'], stay_days=x['stay_days']),
+                            axis=1)
     df[['cancel_days', 'cancel_fine']] = pd.DataFrame(df.policy.tolist(), index=df.index)
     df.drop('policy', axis=1, inplace=True)
     df.drop('cancellation_policy_code', axis=1, inplace=True)
@@ -75,12 +78,13 @@ def load_data(train_filename: str, test_filename: str):
     df["is_user_logged_in"] = df["is_user_logged_in"].astype(int)
     df["is_first_booking"] = df["is_first_booking"].astype(int)
     df = df.fillna(0)
-    end_idx = df.shape[0]
-    test_X = df[end_idx - test_size:]
-    test_y = y[end_idx - test_size:]
-    train_X = df[:end_idx - test_size]
-    train_y = y[:end_idx - test_size]
-    return train_X, train_y, test_X, test_y
+    # end_idx = df.shape[0]
+    # test_X = df[end_idx - test_size:]
+    # test_y = y[end_idx - test_size:]
+    # train_X = df[:end_idx - test_size]
+    # train_y = y[:end_idx - test_size]
+    # return train_X, train_y, test_X, test_y
+    return df, y
 
 
 def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
@@ -108,9 +112,11 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
 if __name__ == '__main__':
     np.random.seed(0)
     # Load data
-    train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv", "test_set_week_2.csv")
+    # train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv", "test_set_week_2.csv")
+    df, labels = load_data("../datasets/agoda_cancellation_train.csv")
+    train_X, train_y, test_X, test_y = split_train_test(df, labels, 0.9)
     # Fit model over data
     estimator = AgodaCancellationEstimator().fit(train_X, train_y)
-    print(estimator.loss(test_X, test_y))
+    print(1 - estimator.loss(test_X, test_y))
     # Store model predictions over test set
-    evaluate_and_export(estimator, test_X, "204867881_316563949_207090119.csv")
+    #evaluate_and_export(estimator, test_X, "204867881_316563949_207090119.csv")
