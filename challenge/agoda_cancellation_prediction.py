@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import *
 from sklearn import metrics
 from sklearn.preprocessing import *
-
+from sklearn import tree
 
 def days_to_P(policy, days):
     d_idx = policy.find('D')
@@ -62,6 +62,7 @@ def load_data(train_filename: str, test_filename=None):
     """
     full_data = pd.read_csv(train_filename).drop_duplicates()
     test_data = pd.read_csv(test_filename).drop_duplicates()
+    test_data['cancellation_datetime'] = 0
     test_size = test_data.shape[0]
     full_data = pd.concat([full_data, test_data])
     df = pd.DataFrame(full_data, columns=['booking_datetime', 'checkin_date', 'checkout_date',
@@ -168,11 +169,10 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
 if __name__ == '__main__':
     # Load data
     np.random.seed(0)
-    train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv", "test_set_week_2.csv")
-    for i in range(1, 47, 5):
-        lr = RandomForestClassifier(n_estimators=i)
-        lr.fit(train_X, train_y)
-        print(i, metrics.f1_score(test_y, lr.predict(test_X), average='macro'))
+    train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv", "test_set_week_1.csv")
+    lr = RandomForestClassifier(n_estimators=2)
+    lr.fit(train_X, train_y)
+    evaluate_and_export(lr, test_X, "204867881_316563949_207090119.csv")
     # df, labels = load_data("../datasets/agoda_cancellation_train.csv")
     # for j in [4, 10, 15, 25, 30, 45]:
     #     f1_scores = []
