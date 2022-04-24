@@ -107,7 +107,7 @@ def compare_gaussian_classifiers():
         lims = np.array([X.min(axis=0), X.max(axis=0)]).T + np.array([-.4, .4])
         for i, model in enumerate([gnb, lda]):
             fig.add_trace(go.Scatter(x=X[:, 0], y=X[:, 1], mode='markers', showlegend=False,
-                                     marker=dict(color=y, symbol=symbols[y],
+                                     marker=dict(color=model.predict(X), symbol=symbols[y],
                                                  colorscale=['red', 'yellow', 'blue'],
                                                  line=dict(color='black', width=1))),
                           row=1, col=i + 1)
@@ -120,7 +120,7 @@ def compare_gaussian_classifiers():
                           row=1, col=i + 1)
         # Add ellipses depicting the covariances of the fitted Gaussians
         for i, model in enumerate([gnb, lda]):
-            for g in range(3):
+            for g in model.classes_:
                 fig.add_trace(get_ellipse(model.mu_[g], model.cov_ if i == 1 else np.diag(model.vars_[g])),
                               row=1, col=i + 1)
         fig.show()

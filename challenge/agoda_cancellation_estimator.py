@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 
+
 class AgodaCancellationEstimator(BaseEstimator):
     """
     An estimator for solving the Agoda Cancellation challenge
