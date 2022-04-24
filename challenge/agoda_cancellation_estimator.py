@@ -4,7 +4,7 @@ from IMLearn.base import BaseEstimator
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-
+from sklearn import metrics
 
 class AgodaCancellationEstimator(BaseEstimator):
     """
@@ -24,6 +24,7 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         """
         super().__init__()
+        self.fitted_ = True
 
     def _fit(self, X: np.ndarray, y: np.ndarray, ) -> NoReturn:
         """
@@ -41,8 +42,18 @@ class AgodaCancellationEstimator(BaseEstimator):
         -----
 
         """
-        self.rf = RandomForestClassifier(n_estimators=4, random_state=0)
+        print(X.shape)
+        self.rf = RandomForestClassifier(n_estimators=4)
         self.rf.fit(X, y)
+        # Get numerical feature importances
+        importances = list(self.rf.feature_importances_)
+        # List of tuples with variable and importance
+        feature_importances = [(feature, round(importance, 2)) for feature, importance in
+                               zip(list(X.columns), importances)]
+        # Sort the feature importances by most important first
+        feature_importances = sorted(feature_importances, key=lambda x: x[1], reverse=True)
+        # Print out the feature and importances
+        [print('Variable: {:20} Importance: {}'.format(*pair)) for pair in feature_importances]
         # self.logisticRegr = LogisticRegression()
         # self.logisticRegr.fit(X, y)
 
@@ -76,7 +87,7 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         Returns
         -------
-        loss : float
+        loss : floatx
             Performance under loss function
         """
-        return np.mean(abs(self.predict(X) - y))
+        return metrics.f1_score(self.predict(X), y, average='macro')

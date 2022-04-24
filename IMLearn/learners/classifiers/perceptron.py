@@ -71,7 +71,7 @@ class Perceptron(BaseEstimator):
 
         Parameters
         ----------
-        X_intercepted : ndarray of shape (n_samples, n_features)
+        X: ndarray of shape (n_samples, n_features)
             Input data to fit an estimator for
 
         y : ndarray of shape (n_samples, )

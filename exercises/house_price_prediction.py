@@ -117,6 +117,7 @@ if __name__ == '__main__':
         mean_loss.append(np.mean(test_loss))
         std_loss.append(np.std(test_loss))
     mean_loss = np.array(mean_loss)
+    print(mean_loss)
     std_loss = np.array(std_loss)
     fig, ax = plt.subplots()
     ax.plot(np.arange(10, 101), mean_loss)
