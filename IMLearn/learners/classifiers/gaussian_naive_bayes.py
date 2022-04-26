@@ -3,6 +3,7 @@ from ...base import BaseEstimator
 import numpy as np
 import pandas as pd
 
+
 class GaussianNaiveBayes(BaseEstimator):
     """
     Gaussian Naive-Bayes classifier

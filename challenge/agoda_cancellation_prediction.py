@@ -76,8 +76,10 @@ def load_data(train_filename: str, test_filename=None):
     df['new_datetime'][df['new_datetime'] != 0] = 1
     df['cancellation_datetime'] = df['new_datetime']
     df.drop(['new_datetime', 'another_datetime'], axis=1, inplace=True)
-    # more_data = pd.read_csv('test_set_week_2.csv').drop_duplicates()
+    # more_data = pd.read_csv('test_set_week_1.csv').drop_duplicates()
     # df = pd.concat([df, more_data])
+    # more_data = pd.read_csv('test_set_week_2.csv').drop_duplicates()
+    df = pd.concat([df, more_data])
     test_data = pd.read_csv(test_filename).drop_duplicates()
     test_size = test_data.shape[0]
     full_data = pd.concat([df, test_data])
@@ -198,7 +200,11 @@ if __name__ == '__main__':
     lr = RandomForestClassifier(n_estimators=80)
     lr.fit(train_X, train_y)
     evaluate_and_export(lr, test_X, "204867881_316563949_207090119.csv")
-
+    y = df = pd.read_csv('test_set_week_3_labels.csv')
+    y_pred = pd.read_csv('204867881_316563949_207090119.csv')
+    print(y)
+    print(y_pred)
+    print(metrics.f1_score(y, y_pred, average='macro'))
     # df, labels = load_data("../datasets/agoda_cancellation_train.csv")
     # for j in [4, 10, 15, 25, 30, 45]:
     #     f1_scores = []
