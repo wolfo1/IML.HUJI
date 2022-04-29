@@ -4,6 +4,7 @@ from IMLearn.base import BaseEstimator
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import *
 from sklearn import metrics
 
 
@@ -12,7 +13,7 @@ class AgodaCancellationEstimator(BaseEstimator):
     An estimator for solving the Agoda Cancellation challenge
     """
 
-    def __init__(self):
+    def __init__(self, estimators, weights=None):
         """
         Instantiate an estimator for solving the Agoda Cancellation challenge
 
@@ -26,8 +27,9 @@ class AgodaCancellationEstimator(BaseEstimator):
         """
         super().__init__()
         self.fitted_ = True
+        self.rft = RandomForestClassifier(n_estimators=estimators, class_weight=weights)
 
-    def _fit(self, X: np.ndarray, y: np.ndarray, ) -> NoReturn:
+    def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
         Fit an estimator for given samples
 
@@ -43,20 +45,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         -----
 
         """
-        print(X.shape)
-        self.rf = RandomForestClassifier(n_estimators=4)
-        self.rf.fit(X, y)
-        # Get numerical feature importances
-        importances = list(self.rf.feature_importances_)
-        # List of tuples with variable and importance
-        feature_importances = [(feature, round(importance, 2)) for feature, importance in
-                               zip(list(X.columns), importances)]
-        # Sort the feature importances by most important first
-        feature_importances = sorted(feature_importances, key=lambda x: x[1], reverse=True)
-        # Print out the feature and importances
-        [print('Variable: {:20} Importance: {}'.format(*pair)) for pair in feature_importances]
-        # self.logisticRegr = LogisticRegression()
-        # self.logisticRegr.fit(X, y)
+        self.rft.fit(X, y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -72,7 +61,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.rf.predict(X)
+        return self.rft.predict(X)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
