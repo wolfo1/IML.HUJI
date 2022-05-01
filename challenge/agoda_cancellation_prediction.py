@@ -212,11 +212,11 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
 if __name__ == '__main__':
     np.random.seed(0)
     train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv",
-                                                 "test_weeks_data/test_set_week_4.csv")
+                                                 "test_weeks_data/test_set_week_5.csv")
     estimator = AgodaCancellationEstimator(80, 'balanced')
     estimator.fit(train_X, train_y)
     evaluate_and_export(estimator, test_X, "204867881_316563949_207090119.csv")
     # check f1 score
-    y_pred = pd.read_csv("204867881_316563949_207090119.csv")
-    y = pd.read_csv('test_set_week_4_labels.csv')
-    print(metrics.f1_score(y, y_pred, average='macro'))
+    # y_pred = pd.read_csv("204867881_316563949_207090119.csv")
+    # y = pd.read_csv('test_set_week_4_labels.csv')
+    # print(metrics.f1_score(y, y_pred, average='macro'))
