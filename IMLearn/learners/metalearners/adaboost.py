@@ -2,7 +2,6 @@ import numpy as np
 from ...base import BaseEstimator
 from typing import Callable, NoReturn
 
-
 class AdaBoost(BaseEstimator):
     """
     AdaBoost class for boosting a specified weak learner
@@ -34,7 +33,8 @@ class AdaBoost(BaseEstimator):
         super().__init__()
         self.wl_ = wl
         self.iterations_ = iterations
-        self.models_, self.weights_, self.D_ = None, None, None
+        self.models_ = [None] * iterations
+        self.weights_, self.D_ = None, None, None
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -48,7 +48,10 @@ class AdaBoost(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        raise NotImplementedError()
+        # initial distribution 1/m
+        self.D_ = np.ones(X.shape[0]) / X.shape[0]
+        for t in range(self.iterations_):
+            self.models_[t] = self.wl_().fit(X, y)
 
     def _predict(self, X):
         """
@@ -83,7 +86,8 @@ class AdaBoost(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
-        raise NotImplementedError()
+        from ...metrics import misclassification_error
+        return misclassification_error(y, self.predict(X))
 
     def partial_predict(self, X: np.ndarray, T: int) -> np.ndarray:
         """

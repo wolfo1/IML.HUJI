@@ -1,39 +1,53 @@
-from sklearn.preprocessing import MinMaxScaler
+import warnings
 
+warnings.simplefilter(action='ignore', category=Warning)
 from IMLearn import BaseEstimator
 from challenge.agoda_cancellation_estimator import AgodaCancellationEstimator
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import *
 from sklearn import metrics
+from sklearn.preprocessing import MinMaxScaler
 
 # conversions from USD to all currencies
-conversions = {'USD': 1, 'AED': 3.6725, 'AFN': 87.5007, 'ALL': 111.4952, 'AMD': 467.558, 'ANG': 1.79, 'AOA': 404.0973,
-               'ARS': 114.04, 'AUD': 1.3726, 'AWG': 1.79, 'AZN': 1.6979, 'BAM': 1.8108, 'BBD': 2.0, 'BDT': 85.438,
-               'BGN': 1.8106, 'BHD': 0.376, 'BIF': 2024.8096, 'BMD': 1.0, 'BND': 1.3669, 'BOB': 6.8653, 'BRL': 4.6806,
-               'BSD': 1.0, 'BTN': 76.4959, 'BWP': 11.973, 'BYN': 2.8555, 'BZD': 2.0, 'CAD': 1.2669, 'CDF': 1999.8809,
-               'CHF': 0.9563, 'CLP': 822.3729, 'CNY': 6.5225, 'COP': 3728.9547, 'CRC': 657.6806, 'CUP': 24.0,
-               'CVE': 102.0895, 'CZK': 22.4939, 'DJF': 177.721, 'DKK': 6.9072, 'DOP': 54.912, 'DZD': 143.832,
-               'EGP': 18.5802, 'ERN': 15.0, 'ETB': 51.3614, 'EUR': 0.9259, 'FJD': 2.1163, 'FKP': 0.7787, 'FOK': 6.9072,
-               'GBP': 0.7788, 'GEL': 3.0339, 'GGP': 0.7787, 'GHS': 7.7553, 'GIP': 0.7787, 'GMD': 54.0333,
-               'GNF': 8896.9671, 'GTQ': 7.6475, 'GYD': 209.0387, 'HKD': 7.8479, 'HNL': 24.5693, 'HRK': 6.9759,
-               'HTG': 107.894, 'HUF': 343.295, 'IDR': 14341.489, 'ILS': 3.2735, 'IMP': 0.7787, 'INR': 76.4723,
-               'IQD': 1458.072, 'IRR': 42051.3384, 'ISK': 128.7315, 'JEP': 0.7787, 'JMD': 154.654, 'JOD': 0.709,
-               'JPY': 128.7001, 'KES': 115.7729, 'KGS': 82.9306, 'KHR': 4041.021, 'KID': 1.3734, 'KMF': 455.4913,
-               'KRW': 1241.5203, 'KWD': 0.2996, 'KYD': 0.8333, 'KZT': 443.6302, 'LAK': 13106.4208, 'LBP': 1507.5,
-               'LKR': 330.8464, 'LRD': 152.0024, 'LSL': 15.5633, 'LYD': 4.712, 'MAD': 9.6981, 'MDL': 18.4927,
-               'MGA': 3991.8343, 'MKD': 56.6224, 'MMK': 1835.3117, 'MNT': 3052.3832, 'MOP': 8.0833, 'MRU': 36.4208,
-               'MUR': 42.6761, 'MVR': 15.4107, 'MWK': 819.5117, 'MXN': 20.2706, 'MYR': 4.3037, 'MZN': 64.6108,
-               'NAD': 15.5633, 'NGN': 414.9575, 'NIO': 35.8503, 'NOK': 8.9409, 'NPR': 122.3934, 'NZD': 1.5043,
-               'OMR': 0.3845, 'PAB': 1.0, 'PEN': 3.7455, 'PGK': 3.5245, 'PHP': 52.3739, 'PKR': 186.6637, 'PLN': 4.2895,
-               'PYG': 6827.8499, 'QAR': 3.64, 'RON': 4.5623, 'RSD': 108.8545, 'RUB': 77.0753, 'RWF': 1051.2487,
-               'SAR': 3.75, 'SBD': 7.9427, 'SCR': 14.4082, 'SDG': 445.0241, 'SEK': 9.5371, 'SGD': 1.3669, 'SHP': 0.7787,
-               'SLL': 12368.3272, 'SOS': 577.9904, 'SRD': 20.7337, 'SSP': 425.1448, 'STN': 22.6835, 'SYP': 2517.89,
-               'SZL': 15.5633, 'THB': 34.0252, 'TJS': 12.4745, 'TMT': 3.4991, 'TND': 2.819, 'TOP': 2.2329,
-               'TRY': 14.7711, 'TTD': 6.7809, 'TVD': 1.3734, 'TWD': 29.2194, 'TZS': 2316.5256, 'UAH': 29.523,
-               'UGX': 3522.2721, 'UYU': 40.3923, 'UZS': 11347.4483, 'VES': 4.4354, 'VND': 22974.0933, 'VUV': 111.8606,
-               'WST': 2.5658, 'XAF': 607.3217, 'XCD': 2.7, 'XDR': 0.7358, 'XOF': 607.3217, 'XPF': 110.4843,
-               'YER': 250.3169, 'ZAR': 15.5636, 'ZMW': 17.0195, 'ZWL': 153.7166}
+TO_USD = {'USD': 1, 'AED': 3.6725, 'AFN': 87.5007, 'ALL': 111.4952, 'AMD': 467.558, 'ANG': 1.79, 'AOA': 404.0973,
+          'ARS': 114.04, 'AUD': 1.3726, 'AWG': 1.79, 'AZN': 1.6979, 'BAM': 1.8108, 'BBD': 2.0, 'BDT': 85.438,
+          'BGN': 1.8106, 'BHD': 0.376, 'BIF': 2024.8096, 'BMD': 1.0, 'BND': 1.3669, 'BOB': 6.8653, 'BRL': 4.6806,
+          'BSD': 1.0, 'BTN': 76.4959, 'BWP': 11.973, 'BYN': 2.8555, 'BZD': 2.0, 'CAD': 1.2669, 'CDF': 1999.8809,
+          'CHF': 0.9563, 'CLP': 822.3729, 'CNY': 6.5225, 'COP': 3728.9547, 'CRC': 657.6806, 'CUP': 24.0,
+          'CVE': 102.0895, 'CZK': 22.4939, 'DJF': 177.721, 'DKK': 6.9072, 'DOP': 54.912, 'DZD': 143.832,
+          'EGP': 18.5802, 'ERN': 15.0, 'ETB': 51.3614, 'EUR': 0.9259, 'FJD': 2.1163, 'FKP': 0.7787, 'FOK': 6.9072,
+          'GBP': 0.7788, 'GEL': 3.0339, 'GGP': 0.7787, 'GHS': 7.7553, 'GIP': 0.7787, 'GMD': 54.0333,
+          'GNF': 8896.9671, 'GTQ': 7.6475, 'GYD': 209.0387, 'HKD': 7.8479, 'HNL': 24.5693, 'HRK': 6.9759,
+          'HTG': 107.894, 'HUF': 343.295, 'IDR': 14341.489, 'ILS': 3.2735, 'IMP': 0.7787, 'INR': 76.4723,
+          'IQD': 1458.072, 'IRR': 42051.3384, 'ISK': 128.7315, 'JEP': 0.7787, 'JMD': 154.654, 'JOD': 0.709,
+          'JPY': 128.7001, 'KES': 115.7729, 'KGS': 82.9306, 'KHR': 4041.021, 'KID': 1.3734, 'KMF': 455.4913,
+          'KRW': 1241.5203, 'KWD': 0.2996, 'KYD': 0.8333, 'KZT': 443.6302, 'LAK': 13106.4208, 'LBP': 1507.5,
+          'LKR': 330.8464, 'LRD': 152.0024, 'LSL': 15.5633, 'LYD': 4.712, 'MAD': 9.6981, 'MDL': 18.4927,
+          'MGA': 3991.8343, 'MKD': 56.6224, 'MMK': 1835.3117, 'MNT': 3052.3832, 'MOP': 8.0833, 'MRU': 36.4208,
+          'MUR': 42.6761, 'MVR': 15.4107, 'MWK': 819.5117, 'MXN': 20.2706, 'MYR': 4.3037, 'MZN': 64.6108,
+          'NAD': 15.5633, 'NGN': 414.9575, 'NIO': 35.8503, 'NOK': 8.9409, 'NPR': 122.3934, 'NZD': 1.5043,
+          'OMR': 0.3845, 'PAB': 1.0, 'PEN': 3.7455, 'PGK': 3.5245, 'PHP': 52.3739, 'PKR': 186.6637, 'PLN': 4.2895,
+          'PYG': 6827.8499, 'QAR': 3.64, 'RON': 4.5623, 'RSD': 108.8545, 'RUB': 77.0753, 'RWF': 1051.2487,
+          'SAR': 3.75, 'SBD': 7.9427, 'SCR': 14.4082, 'SDG': 445.0241, 'SEK': 9.5371, 'SGD': 1.3669, 'SHP': 0.7787,
+          'SLL': 12368.3272, 'SOS': 577.9904, 'SRD': 20.7337, 'SSP': 425.1448, 'STN': 22.6835, 'SYP': 2517.89,
+          'SZL': 15.5633, 'THB': 34.0252, 'TJS': 12.4745, 'TMT': 3.4991, 'TND': 2.819, 'TOP': 2.2329,
+          'TRY': 14.7711, 'TTD': 6.7809, 'TVD': 1.3734, 'TWD': 29.2194, 'TZS': 2316.5256, 'UAH': 29.523,
+          'UGX': 3522.2721, 'UYU': 40.3923, 'UZS': 11347.4483, 'VES': 4.4354, 'VND': 22974.0933, 'VUV': 111.8606,
+          'WST': 2.5658, 'XAF': 607.3217, 'XCD': 2.7, 'XDR': 0.7358, 'XOF': 607.3217, 'XPF': 110.4843,
+          'YER': 250.3169, 'ZAR': 15.5636, 'ZMW': 17.0195, 'ZWL': 153.7166}
+
+WEEKLY_LABELS_FILES = {1: 'test_set_week_1_labels.csv', 2: 'test_set_labels_week_2.csv',
+                       3: 'test_set_week_3_labels.csv',
+                       4: 'test_set_week_4_labels.csv'}
+
+
+def undersample(df: pd.DataFrame, label_col_name: str) -> pd.DataFrame:
+    # find the number of observations in the smallest group
+    label_1 = df[df[label_col_name] == 1]
+    label_0 = df[df[label_col_name] == 0]
+    label_0 = label_0.sample(n=len(label_1) * 10, random_state=1)
+    df = pd.concat([label_1, label_0], axis=0)
+    return df
 
 
 def days_to_P(policy, days):
@@ -49,9 +63,9 @@ def days_to_P(policy, days):
 
 def parse_policy2(policy, stay_days):
     if policy == 'UNKNOWN':
-        return 100
+        return 100100
     if stay_days < 0:
-        return 100
+        return 100100
     policies = policy.split("_")
     if len(policies) == 1:
         days, P = days_to_P(policies[0], stay_days)
@@ -73,13 +87,17 @@ def parse_policy2(policy, stay_days):
         return int(day1 + P1 + day2 + P2 + P3)
 
 
-def load_data(train_filename: str, test_filename=None):
+def load_data(train_filename: str, test_filename, week_sets=iter([])):
     """
     Load Agoda booking cancellation dataset
     Parameters
     ----------
     train_filename: str
         Path to house prices dataset
+    test_filename: str
+        path to test dataset
+    week_sets: iterable
+        the number of weeks to learn on in addition to train dataset
 
     Returns
     -------
@@ -102,10 +120,16 @@ def load_data(train_filename: str, test_filename=None):
     df['new_datetime'][df['new_datetime'] != 0] = 1
     df['cancellation_datetime'] = df['new_datetime']
     df.drop(['new_datetime', 'another_datetime'], axis=1, inplace=True)
-    for k in range(1, 4):
-        more_data = pd.read_csv(f'test_weeks_data/test_set_week_{k}.csv').drop_duplicates()
-        df = pd.concat([df, more_data])
-    test_data = pd.read_csv(test_filename).drop_duplicates()
+    # add weekly data with labels
+    for k in week_sets:
+        weekly_set = pd.read_csv(f'test_weeks_data/test_set_week_{k}.csv')
+        weekly_labels = pd.read_csv(f'test_weeks_labels/{WEEKLY_LABELS_FILES[k]}')
+        weekly_data = pd.concat([weekly_set, weekly_labels], axis=1)
+        weekly_data['cancellation_datetime'] = [int(x.strip()[-1]) for x in weekly_data['h_booking_id|label']]
+        weekly_data = weekly_data.drop('h_booking_id|label', axis=1)
+        df = pd.concat([df, weekly_data], ignore_index=True)
+    # add test data to be processed together with train data
+    test_data = pd.read_csv(test_filename)
     test_size = test_data.shape[0]
     full_data = pd.concat([df, test_data])
     df = pd.DataFrame(full_data, columns=['booking_datetime', 'checkin_date', 'checkout_date',
@@ -119,35 +143,40 @@ def load_data(train_filename: str, test_filename=None):
                                           # 'no_of_extra_bed'
                                           'no_of_room',
                                           'original_selling_amount',
-                                          # 'original_payment_method',
+                                          'original_payment_method',
                                           # 'original_payment_type',
                                           'original_payment_currency',
                                           'is_user_logged_in', 'is_first_booking',
-                                          # 'request_nonesmoke', 'request_latecheckin', 'request_highfloor',
-                                          # 'request_largebed', 'request_twinbeds', 'request_airport',
+                                          'request_nonesmoke', 'request_latecheckin', 'request_highfloor',
+                                          'request_largebed', 'request_twinbeds', 'request_airport',
                                           'request_earlycheckin',
                                           'cancellation_policy_code', 'cancellation_datetime',
-                                          # 'hotel_city_code'
-                                          # 'hotel_chain_code',
-                                          # 'hotel_brand_code',
+                                          # 'hotel_city_code',
+                                          'hotel_chain_code',
+                                          'hotel_brand_code',
                                           'hotel_area_code',
                                           # 'hotel_country_code'
                                           ])
-    df = df[df['original_selling_amount'] < 20000]
+    # df = df[df['original_selling_amount'] < 20000]
     df = pd.get_dummies(data=df, columns=[
         # 'accommadation_type_name',
         'charge_option',
         'customer_nationality',
         # 'guest_nationality_country_name',
-        # 'original_payment_method',
+        'original_payment_method',
         # 'original_payment_type'
         # 'original_payment_currency'
     ], drop_first=True)
     df['booking_datetime'] = pd.to_datetime(df['booking_datetime'])
     df['checkin_date'] = pd.to_datetime(df['checkin_date'])
     df['checkout_date'] = pd.to_datetime(df['checkout_date'])
-    # groups
-    groups_labels = ['hotel_area_code']
+    # bin by cancellation datetime
+    groups_labels = [
+        'hotel_area_code',
+        # 'hotel_city_code',
+        'hotel_chain_code',
+        'hotel_brand_code'
+    ]
     for x in groups_labels:
         groups = df.groupby(x).agg({'cancellation_datetime': 'mean'})
         groups[x + '_group'] = pd.cut(groups['cancellation_datetime'], bins=7, include_lowest=True)
@@ -164,11 +193,12 @@ def load_data(train_filename: str, test_filename=None):
     df['stay_days'] = (df['checkout_date'] - df['checkin_date']).dt.days
     df["checkin_date"] = pd.to_datetime(df["checkin_date"]).dt.dayofyear
     df["booking_datetime"] = pd.to_datetime(df["booking_datetime"]).dt.dayofyear
-    # parse police code
+    # parse policy code
     df['policy'] = df.apply(lambda x: parse_policy2(policy=x['cancellation_policy_code'], stay_days=x['stay_days']),
                             axis=1)
     # convert currency sums to USD
-    df['original_selling_amount'] = df.apply(lambda x: (x['original_selling_amount'] * 1 / (conversions[x['original_payment_currency']])), axis=1)
+    df['original_selling_amount'] = df.apply(
+        lambda x: (x['original_selling_amount'] * 1 / (TO_USD[x['original_payment_currency']])), axis=1)
     # change true/false to 0/1
     df["is_user_logged_in"] = df["is_user_logged_in"].astype(int)
     df["is_first_booking"] = df["is_first_booking"].astype(int)
@@ -212,11 +242,7 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
 if __name__ == '__main__':
     np.random.seed(0)
     train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv",
-                                                 "test_weeks_data/test_set_week_5.csv")
-    estimator = AgodaCancellationEstimator(80, 'balanced')
+                                                 "test_weeks_data/test_set_week_6.csv", range(1, 5))
+    estimator = AgodaCancellationEstimator()
     estimator.fit(train_X, train_y)
     evaluate_and_export(estimator, test_X, "204867881_316563949_207090119.csv")
-    # check f1 score
-    # y_pred = pd.read_csv("204867881_316563949_207090119.csv")
-    # y = pd.read_csv('test_set_week_4_labels.csv')
-    # print(metrics.f1_score(y, y_pred, average='macro'))
