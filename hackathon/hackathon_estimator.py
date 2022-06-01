@@ -9,25 +9,26 @@ from sklearn import metrics
 
 
 def rfc_best_params(train_X, train_y):
-    param_grid = {
-        'n_estimators': [2, 45, 80, 100, 150, 200],
-        'max_features': ['auto', 'sqrt', 'log2'],
-        'max_depth': [4, 5, 6, 7, 8],
-        'criterion': ['gini', 'entropy'],
-        'class_weight': [None, 'Balanced', 'balanced_subsample']
-    }
-    rfc = RandomForestClassifier()
-    CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5, scoring='f1_macro')
-    CV_rfc.fit(train_X, train_y)
-    print(CV_rfc.best_params_)
+    # param_grid = {
+    #     'n_estimators': [2, 45, 80, 100, 150, 200],
+    #     'max_features': ['auto', 'sqrt', 'log2'],
+    #     'max_depth': [4, 5, 6, 7, 8],
+    #     'criterion': ['gini', 'entropy'],
+    #     'class_weight': [None, 'Balanced', 'balanced_subsample']
+    # }
+    # rfc = RandomForestClassifier()
+    # CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5, scoring='f1_macro')
+    # CV_rfc.fit(train_X, train_y)
+    # print(CV_rfc.best_params_)
+    raise NotImplemented
 
 
-class AgodaCancellationEstimator(BaseEstimator):
+class HackathonEstimator(BaseEstimator):
     """
-    An estimator for solving the Agoda Cancellation challenge
+    An estimator for solving the hackathon challenge
     """
 
-    def __init__(self, estimators):
+    def __init__(self):
         """
         Instantiate an estimator for solving the Agoda Cancellation challenge
 
@@ -41,7 +42,6 @@ class AgodaCancellationEstimator(BaseEstimator):
         """
         super().__init__()
         self.fitted_ = True
-        self.rfc = RandomForestClassifier(n_estimators=estimators)
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -59,8 +59,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         -----
 
         """
-
-        self.rfc.fit(X, y)
+        raise NotImplemented
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -76,7 +75,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return self.rfc.predict(X)
+        raise NotImplemented
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -95,4 +94,4 @@ class AgodaCancellationEstimator(BaseEstimator):
         loss : floatx
             Performance under loss function
         """
-        return metrics.f1_score(self.predict(X), y, average='macro')
+        raise NotImplemented

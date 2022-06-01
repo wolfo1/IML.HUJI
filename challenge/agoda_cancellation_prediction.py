@@ -1,12 +1,13 @@
 import warnings
-
-warnings.simplefilter(action='ignore', category=Warning)
 from IMLearn import BaseEstimator
 from challenge.agoda_cancellation_estimator import AgodaCancellationEstimator
 import numpy as np
 import pandas as pd
 from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
+import plotly.graph_objects as go
+
+warnings.simplefilter(action='ignore', category=Warning)
 
 # conversions from USD to all currencies
 TO_USD = {'USD': 1, 'AED': 3.6725, 'AFN': 87.5007, 'ALL': 111.4952, 'AMD': 467.558, 'ANG': 1.79, 'AOA': 404.0973,
@@ -36,10 +37,6 @@ TO_USD = {'USD': 1, 'AED': 3.6725, 'AFN': 87.5007, 'ALL': 111.4952, 'AMD': 467.5
           'WST': 2.5658, 'XAF': 607.3217, 'XCD': 2.7, 'XDR': 0.7358, 'XOF': 607.3217, 'XPF': 110.4843,
           'YER': 250.3169, 'ZAR': 15.5636, 'ZMW': 17.0195, 'ZWL': 153.7166}
 
-WEEKLY_LABELS_FILES = {1: 'test_set_week_1_labels.csv', 2: 'test_set_labels_week_2.csv',
-                       3: 'test_set_week_3_labels.csv',
-                       4: 'test_set_week_4_labels.csv'}
-
 
 def undersample(df: pd.DataFrame, label_col_name: str) -> pd.DataFrame:
     # find the number of observations in the smallest group
@@ -61,7 +58,7 @@ def days_to_P(policy, days):
     return fine_days, P
 
 
-def parse_policy2(policy, stay_days):
+def parse_policy(policy, stay_days):
     if policy == 'UNKNOWN':
         return 100100
     if stay_days < 0:
@@ -122,29 +119,29 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
     df.drop(['new_datetime', 'another_datetime'], axis=1, inplace=True)
     # add weekly data with labels
     for k in week_sets:
-        weekly_set = pd.read_csv(f'test_weeks_data/test_set_week_{k}.csv')
-        weekly_labels = pd.read_csv(f'test_weeks_labels/{WEEKLY_LABELS_FILES[k]}')
-        weekly_data = pd.concat([weekly_set, weekly_labels], axis=1)
-        weekly_data['cancellation_datetime'] = [int(x.strip()[-1]) for x in weekly_data['h_booking_id|label']]
-        weekly_data = weekly_data.drop('h_booking_id|label', axis=1)
-        df = pd.concat([df, weekly_data], ignore_index=True)
+        weekly_set = pd.read_csv(f'test_weeks_data/week_{k}_test_data.csv')
+        weekly_labels = pd.read_csv(f'test_weeks_labels/week_{k}_labels.csv')
+        weekly_set['cancellation_datetime'] = weekly_labels['cancel']
+        df = pd.concat([df, weekly_set], ignore_index=True)
     # add test data to be processed together with train data
     test_data = pd.read_csv(test_filename)
     test_size = test_data.shape[0]
     full_data = pd.concat([df, test_data])
     df = pd.DataFrame(full_data, columns=['booking_datetime', 'checkin_date', 'checkout_date',
+                                          # 'hotel_id',
+                                          # 'hotel_live_date,
                                           'hotel_star_rating',
-                                          # 'accommadation_type_name',
+                                          'accommadation_type_name',
                                           'charge_option',
                                           'customer_nationality',
                                           'guest_is_not_the_customer',
-                                          # 'guest_nationality_country_name',
+                                          'guest_nationality_country_name',
                                           'no_of_adults', 'no_of_children',
-                                          # 'no_of_extra_bed'
+                                          'no_of_extra_bed'
                                           'no_of_room',
                                           'original_selling_amount',
                                           'original_payment_method',
-                                          # 'original_payment_type',
+                                          'original_payment_type',
                                           'original_payment_currency',
                                           'is_user_logged_in', 'is_first_booking',
                                           'request_nonesmoke', 'request_latecheckin', 'request_highfloor',
@@ -152,20 +149,20 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
                                           'request_earlycheckin',
                                           'cancellation_policy_code', 'cancellation_datetime',
                                           # 'hotel_city_code',
-                                          'hotel_chain_code',
-                                          'hotel_brand_code',
-                                          'hotel_area_code',
-                                          # 'hotel_country_code'
+                                          # 'hotel_chain_code',
+                                          # 'hotel_brand_code',
+                                          'hotel_area_code'
+                                          # 'hotel_country_code',
+                                          # 'language'
                                           ])
     # df = df[df['original_selling_amount'] < 20000]
     df = pd.get_dummies(data=df, columns=[
-        # 'accommadation_type_name',
+        'accommadation_type_name',
         'charge_option',
         'customer_nationality',
-        # 'guest_nationality_country_name',
+        'guest_nationality_country_name',
         'original_payment_method',
-        # 'original_payment_type'
-        # 'original_payment_currency'
+        'original_payment_type',
     ], drop_first=True)
     df['booking_datetime'] = pd.to_datetime(df['booking_datetime'])
     df['checkin_date'] = pd.to_datetime(df['checkin_date'])
@@ -174,8 +171,8 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
     groups_labels = [
         'hotel_area_code',
         # 'hotel_city_code',
-        'hotel_chain_code',
-        'hotel_brand_code'
+        # 'hotel_chain_code',
+        # 'hotel_brand_code'
     ]
     for x in groups_labels:
         groups = df.groupby(x).agg({'cancellation_datetime': 'mean'})
@@ -194,7 +191,7 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
     df["checkin_date"] = pd.to_datetime(df["checkin_date"]).dt.dayofyear
     df["booking_datetime"] = pd.to_datetime(df["booking_datetime"]).dt.dayofyear
     # parse policy code
-    df['policy'] = df.apply(lambda x: parse_policy2(policy=x['cancellation_policy_code'], stay_days=x['stay_days']),
+    df['policy'] = df.apply(lambda x: parse_policy(policy=x['cancellation_policy_code'], stay_days=x['stay_days']),
                             axis=1)
     # convert currency sums to USD
     df['original_selling_amount'] = df.apply(
@@ -206,8 +203,8 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
     df.drop(['cancellation_policy_code', 'original_payment_currency', 'cancellation_datetime', 'checkout_date'], axis=1,
             inplace=True)
     df = df.fillna(0)
-    sc = MinMaxScaler()
-    df = sc.fit_transform(df)
+    # sc = MinMaxScaler()
+    # df = sc.fit_transform(df)
     end_idx = df.shape[0]
     test_X = df[end_idx - test_size:]
     test_y = y[end_idx - test_size:]
@@ -241,8 +238,11 @@ def evaluate_and_export(estimator: BaseEstimator, X: np.ndarray, filename: str):
 
 if __name__ == '__main__':
     np.random.seed(0)
+    week_to_test = 8
+    k = 200
     train_X, train_y, test_X, test_y = load_data("../datasets/agoda_cancellation_train.csv",
-                                                 "test_weeks_data/test_set_week_6.csv", range(1, 5))
-    estimator = AgodaCancellationEstimator()
+                                                 f"test_weeks_data/week_{week_to_test}_test_data.csv",
+                                                 range(1, week_to_test))
+    estimator = AgodaCancellationEstimator(k)
     estimator.fit(train_X, train_y)
     evaluate_and_export(estimator, test_X, "204867881_316563949_207090119.csv")

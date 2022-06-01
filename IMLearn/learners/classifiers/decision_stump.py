@@ -21,6 +21,7 @@ class DecisionStump(BaseEstimator):
     self.sign_: int
         The label to predict for samples where the value of the j'th feature is about the threshold
     """
+
     def __init__(self) -> DecisionStump:
         """
         Instantiate a Decision stump classifier
@@ -42,9 +43,9 @@ class DecisionStump(BaseEstimator):
         """
         min_err = np.inf
         for col, sign in product(range(X.shape[1]), [-1, 1]):
-            thr, th_err = self._find_threshold(X[:col], y, sign)
-            if th_err < min_err:
-                min_err = th_err
+            thr, thr_err = self._find_threshold(X[:, col], y, sign)
+            if thr_err < min_err:
+                min_err = thr_err
                 self.threshold_ = thr
                 self.sign_ = sign
                 self.j_ = col
@@ -68,7 +69,7 @@ class DecisionStump(BaseEstimator):
         Feature values strictly below threshold are predicted as `-sign` whereas values which equal
         to or above the threshold are predicted as `sign`
         """
-        return np.where(X[:self.j_] >= self.threshold_, self.sign_, -self.sign_)
+        return np.where(X[:, self.j_] >= self.threshold_, self.sign_, -self.sign_)
 
     def _find_threshold(self, values: np.ndarray, labels: np.ndarray, sign: int) -> Tuple[float, float]:
         """
@@ -104,7 +105,8 @@ class DecisionStump(BaseEstimator):
         thr = 0
         for i in values:
             y_pred = np.where(values >= i, sign, -sign)
-            err = misclassification_error(labels, y_pred)
+            # weighted loss (in respect to D)
+            err = np.sum(np.abs(labels * (np.sign(labels) != y_pred))) / labels.shape[0]
             if err < thr_error:
                 thr_error = err
                 thr = i
