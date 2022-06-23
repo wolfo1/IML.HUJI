@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import NoReturn
-from IMLearn.base import BaseEstimator
 import numpy as np
 # classifiers
 from sklearn.ensemble import RandomForestClassifier
@@ -22,7 +21,7 @@ def rfc_best_params(train_X, train_y):
     print(CV_rfc.best_params_)
 
 
-class AgodaCancellationEstimator(BaseEstimator):
+class AgodaCancellationEstimator:
     """
     An estimator for solving the Agoda Cancellation challenge
     """
@@ -39,11 +38,9 @@ class AgodaCancellationEstimator(BaseEstimator):
         ----------
 
         """
-        super().__init__()
-        self.fitted_ = True
         self.rfc = RandomForestClassifier(n_estimators=estimators, class_weight='balanced')
 
-    def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
         Fit an estimator for given samples
 
@@ -62,7 +59,7 @@ class AgodaCancellationEstimator(BaseEstimator):
 
         self.rfc.fit(X, y)
 
-    def _predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Predict responses for given samples using fitted estimator
 
@@ -78,7 +75,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         """
         return self.rfc.predict(X)
 
-    def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
+    def score(self, X: np.ndarray, y: np.ndarray) -> float:
         """
         Evaluate performance under loss function
 

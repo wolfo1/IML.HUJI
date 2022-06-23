@@ -144,10 +144,10 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
                                           'request_largebed', 'request_twinbeds', 'request_airport',
                                           'request_earlycheckin',
                                           'cancellation_policy_code', 'cancellation_datetime',
-                                          'hotel_city_code',
-                                          'hotel_chain_code',
-                                          'hotel_brand_code',
-                                          'hotel_country_code',
+                                          # 'hotel_city_code',
+                                          # 'hotel_chain_code',
+                                          # 'hotel_brand_code',
+                                          # 'hotel_country_code',
                                           'hotel_area_code'
                                           # 'language'
                                           ])
@@ -165,11 +165,11 @@ def load_data(train_filename: str, test_filename, week_sets=iter([])):
     df['checkout_date'] = pd.to_datetime(df['checkout_date'])
     # bin by cancellation datetime
     groups_labels = [
-        # 'hotel_area_code',
+        'hotel_area_code'
         # 'hotel_city_code',
         # 'hotel_chain_code',
         # 'hotel_brand_code',
-        'hotel_country_code'
+        # 'hotel_country_code'
     ]
     for x in groups_labels:
         groups = df.groupby(x).agg({'cancellation_datetime': 'mean'})
