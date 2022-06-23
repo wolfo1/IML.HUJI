@@ -5,6 +5,16 @@ from IMLearn.desent_methods import GradientDescent
 from IMLearn.desent_methods.modules import LogisticModule, RegularizedModule, L1, L2
 
 
+def add_one_col(X):
+    if len(X.shape) == 2:
+        Xtag = np.ones((X.shape[0], X.shape[1] + 1))
+        Xtag[:, 1:] = X
+    else:
+        Xtag = np.ones((X.shape[0], 2))
+        Xtag[:, 1] = X
+    return Xtag
+
+
 class LogisticRegression(BaseEstimator):
     """
     Logistic Regression Classifier
@@ -88,7 +98,18 @@ class LogisticRegression(BaseEstimator):
         Fits model using specified `self.optimizer_` passed when instantiating class and includes an intercept
         if specified by `self.include_intercept_
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = add_one_col(X)
+        self.coefs_ = np.random.randn(X.shape[1])
+        reg = None
+        if self.penalty_ == "l1":
+            reg = L1()
+        elif self.penalty_ == "l2":
+            reg = L2()
+        log_module = LogisticModule()
+        reg_module = RegularizedModule(fidelity_module=log_module, regularization_module=reg,
+                                    lam=self.lam_, include_intercept=self.include_intercept_, weights=self.coefs_)
+        self.coefs_ = self.solver_.fit(f=reg_module, X=X, y=y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -104,7 +125,9 @@ class LogisticRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = add_one_col(X)
+        return np.where(self.predict_proba(X) >= self.alpha_, 1, 0)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
@@ -120,7 +143,7 @@ class LogisticRegression(BaseEstimator):
         probabilities: ndarray of shape (n_samples,)
             Probability of each sample being classified as `1` according to the fitted model
         """
-        raise NotImplementedError()
+        return 1 / (1 + np.exp(np.matmul(-X, self.coefs_)))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -139,4 +162,5 @@ class LogisticRegression(BaseEstimator):
         loss : float
             Performance under misclassification error
         """
-        raise NotImplementedError()
+        from IMLearn.metrics.loss_functions import misclassification_error
+        return misclassification_error(y, self.predict(X))

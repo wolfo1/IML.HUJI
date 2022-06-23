@@ -39,6 +39,7 @@ class GradientDescent:
         Callable function receives as input any argument relevant for the current GD iteration. Arguments
         are specified in the `GradientDescent.fit` function
     """
+
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
@@ -97,7 +98,7 @@ class GradientDescent:
         Notes
         -----
         - Optimization is performed as long as self.max_iter_ has not been reached and that
-        Euclidean norm of w^(t)-w^(t-1) is more than the specified self.tol_
+        Euclidean delta of w^(t)-w^(t-1) is more than the specified self.tol_
 
         - At each iteration the learning rate is specified according to self.learning_rate_.lr_step
 
@@ -116,7 +117,36 @@ class GradientDescent:
             - eta: float
                 Learning rate used at current iteration
             - delta: float
-                Euclidean norm of w^(t)-w^(t-1)
+                Euclidean delta of w^(t)-w^(t-1)
 
         """
-        raise NotImplementedError()
+        current_weights = f.weights
+        # best weights and their score
+        best = (current_weights.copy(), f.compute_output(X=X, y=y))
+        # sum of weights and number of iterations
+        average_weights = [current_weights.copy(), 0]
+        for i in range(1, self.max_iter_ + 1):
+            previous_w = current_weights.copy()
+            f.weights = current_weights - self.learning_rate_.lr_step(t=i) * (f.compute_jacobian(X=X, y=y))
+            current_weights = f.weights.copy()
+
+            score = f.compute_output(X=X, y=y)
+            if score < best[1]:
+                best = (current_weights.copy(), score)
+            average_weights[0] += current_weights.copy()
+            average_weights[1] = i
+
+            # stop if delta is greater than tol
+            delta = np.sqrt(np.matmul((current_weights - previous_w), (current_weights - previous_w)))
+            if delta < self.tol_:
+                break
+
+            self.callback_(model=self, weights=current_weights, val=score, grad=f.compute_jacobian(X=X, y=y), t=i,
+                           eta=self.learning_rate_.lr_step(t=i), delta=delta)
+
+        if self.out_type_ == 'best':
+            return best[0]
+        elif self.out_type_ == 'average':
+            return average_weights[0] / average_weights[1]
+        else:
+            return f.weights
