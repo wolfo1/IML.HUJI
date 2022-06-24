@@ -26,9 +26,9 @@ if __name__ == '__main__':
     # export results to CSV
     evaluate_and_export(result, "204867881_316563949_207090119.csv")
     # print f1 score if labels exist
-    # try:
-    #     test_y = pd.read_csv("204867881_316563949_207090119.csv")["predicted_values"]
-    #     true_y = pd.read_csv(f"test_weeks_labels/week_{week_to_test}_labels.csv")['cancel']
-    #     print(f"week {week_to_test}. score:", f1_score(test_y, true_y, average='macro'))
-    # except IOError:
-    #     print("done!")
+    try:
+        test_y = pd.read_csv("204867881_316563949_207090119.csv")["predicted_values"]
+        true_y = pd.read_csv(f"test_weeks_labels/week_{week_to_test}_labels.csv")['cancel']
+        print(f"week {week_to_test}. score:", f1_score(test_y, true_y, average='macro'))
+    except IOError:
+        print("done!")
